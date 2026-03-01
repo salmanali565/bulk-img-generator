@@ -10,7 +10,7 @@ import random
 
 os.makedirs("images", exist_ok=True)
 
-# Auto-detect websockets version for cross-platform header arg
+# ── Auto-detect websockets version for cross-platform header arg ──────────────
 _ws_ver = tuple(int(x) for x in websockets.__version__.split(".")[:2])
 _HEADERS_KWARG = "additional_headers" if _ws_ver >= (12, 0) else "extra_headers"
 
@@ -58,53 +58,54 @@ def gprint(msg, color=C.GREEN, end="\n"):
     print(f"{color}{msg}{C.RESET}", end=end, flush=True)
 
 
-def hline(char="─", color=C.CYAN, width=40): # Smaller default width for mobile
+def hline(char="═", color=C.CYAN, width=60):
     print(f"{color}{char * width}{C.RESET}", flush=True)
 
 
 def banner():
-    # Smaller SK for mobile
     SK = r"""
-  ___ _  __
- / __| |/ /
- \__ \ ' < 
- |___/_|\_\ """
+ ██████╗ ██╗  ██╗
+██╔════╝ ██║ ██╔╝
+╚█████╗  █████╔╝
+ ╚═══██╗ ██╔═██╗
+██████╔╝ ██║  ██╗
+╚═════╝  ╚═╝  ╚═╝"""
 
-    # Smaller HACKER SK for mobile
     HACKER_SK = r"""
-  _  _   _   ___ _  _____ ___ 
- | || | /_\ / __| |/ / __| _ \
- | __ |/ _ \ (__| ' <| _||   /
- |_||_/_/ \_\___|_|\_\___|_|_\ 
-      ___ _  __
-     / __| |/ /
-     \__ \ ' < 
-     |___/_|\_\ """
+ ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗     ███████╗██╗  ██╗
+ ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗    ██╔════╝██║ ██╔╝
+ ███████║███████║██║     █████╔╝ █████╗  ██████╔╝    ███████╗█████╔╝
+ ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗    ╚════██║██╔═██╗
+ ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║    ███████║██║  ██╗
+ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝    ╚══════╝╚═╝  ╚═╝"""
 
     COLOR_CYCLE = [C.GREEN, C.CYAN, C.MAGENTA, C.YELLOW, C.RED, C.GREEN]
     BANNERS     = [SK, HACKER_SK]
 
-    # Cycle between SK and HACKER SK
+    # Cycle between SK and HACKER SK, changing color every 2 seconds — 4 cycles
     for i in range(6):
         banner_art = BANNERS[i % 2]
         color      = COLOR_CYCLE[i % len(COLOR_CYCLE)]
         print_banner(banner_art, color)
 
-        if i == 5: break
+        # After the last banner, print subtitle & boot — then stop cycling
+        if i == 5:
+            break
 
-        print(f"\n  {C.DIM}[ changing in 2s... ]{C.RESET}")
+        print(f"\n  {C.DIM}{C.WHITE}[ changing in 2s... press Ctrl+C to skip ]{C.RESET}")
         try:
             time.sleep(2)
         except KeyboardInterrupt:
             break
 
-    # Final settled banner
+    # Final clear + show HACKER SK in green as the settled banner
     print_banner(HACKER_SK, C.GREEN)
 
     SUBTITLE = """
- ╔════════════════════════════════════╗
- ║  GROK BULK GEN // PIPELINE v2.0    ║
- ╚════════════════════════════════════╝"""
+  ╔══════════════════════════════════════════════╗
+  ║   GROK UNLIMITED IMAGE GEN  //  BULK MODE   ║
+  ║         [ PIPELINE EXPLOIT v2.0 ]           ║
+  ╚══════════════════════════════════════════════╝"""
 
     BOOT = [
         "[BOOT] Initializing SK exploit framework ...",

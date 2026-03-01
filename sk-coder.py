@@ -10,6 +10,10 @@ import random
 
 os.makedirs("images", exist_ok=True)
 
+# ── Auto-detect websockets version for cross-platform header arg ──────────────
+_ws_ver = tuple(int(x) for x in websockets.__version__.split(".")[:2])
+_HEADERS_KWARG = "additional_headers" if _ws_ver >= (12, 0) else "extra_headers"
+
 # ── ANSI Color Codes ──────────────────────────────────────────────────────────
 class C:
     RESET  = "\033[0m"
@@ -170,7 +174,7 @@ async def run_forever(prompt):
 
     async with websockets.connect(
         URI,
-        extra_headers=HEADERS,
+        **{_HEADERS_KWARG: HEADERS},
         compression="deflate",
         ping_interval=20,
         ping_timeout=10

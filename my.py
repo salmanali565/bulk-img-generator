@@ -8,7 +8,18 @@ import time
 import sys
 import random
 
-os.makedirs("images", exist_ok=True)
+# ── Environment & Storage Setup ──────────────────────────────────────────────
+# Check if running in Termux to save to Gallery
+IS_TERMUX = os.path.exists("/sdcard") or os.environ.get("TERMUX_VERSION")
+if IS_TERMUX:
+    IMG_DIR = "/sdcard/Pictures/SK_Grok_Bulk"
+    # Ensure standard Termux local folder as fallback if sdcard isn't mapped
+    if not os.path.exists("/sdcard"):
+        IMG_DIR = os.path.expanduser("~/images")
+else:
+    IMG_DIR = "images"
+
+os.makedirs(IMG_DIR, exist_ok=True)
 
 # ── Auto-detect websockets version for cross-platform header arg ──────────────
 _ws_ver = tuple(int(x) for x in websockets.__version__.split(".")[:2])
@@ -48,9 +59,17 @@ PIPELINE_SIZE = 10   # Parallel requests in-flight at once
 
 
 def print_banner(art, color):
-    """Print a banner in a given color."""
+    """Print a banner in a given color with a glitchy entrance."""
     os.system("cls" if sys.platform == "win32" else "clear")
-    for line in art.strip().split("\n"):
+    lines = art.strip().split("\n")
+    for line in lines:
+        # Subtle glitch: random chars before the real line
+        if random.random() > 0.7:
+            glitch = "".join(random.choice("!@#$%^&*()_+-=") for _ in range(len(line)))
+            print(f"{C.RED}{glitch}{C.RESET}")
+            time.sleep(0.01)
+            # Clear line
+            print("\033[A\033[K", end="") 
         print(f"{color}{C.BOLD}{line}{C.RESET}")
 
 
@@ -63,21 +82,23 @@ def hline(char="═", color=C.CYAN, width=60):
 
 
 def banner():
-    SK = r"""
- ██████╗ ██╗  ██╗
-██╔════╝ ██║ ██╔╝
-╚█████╗  █████╔╝
- ╚═══██╗ ██╔═██╗
-██████╔╝ ██║  ██╗
-╚═════╝  ╚═╝  ╚═╝"""
-
+    # Stacked HACKER + SK for mobile impact
     HACKER_SK = r"""
- ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗     ███████╗██╗  ██╗
- ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗    ██╔════╝██║ ██╔╝
- ███████║███████║██║     █████╔╝ █████╗  ██████╔╝    ███████╗█████╔╝
- ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗    ╚════██║██╔═██╗
- ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║    ███████║██║  ██╗
- ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝    ╚══════╝╚═╝  ╚═╝"""
+  _  _   _   ___ _  _____ ___ 
+ | || | /_\ / __| |/ / __| _ \
+ | __ |/ _ \ (__| ' <| _||   /
+ |_||_/_/ \_\___|_|\_\___|_|_|
+      
+      ___ _  __
+     / __| |/ / 
+     \__ \ ' <  
+     |___/_|\_\ """
+
+    SK = r"""
+      ___ _  __
+     / __| |/ / 
+     \__ \ ' <  
+     |___/_|\_\ """
 
     COLOR_CYCLE = [C.GREEN, C.CYAN, C.MAGENTA, C.YELLOW, C.RED, C.GREEN]
     BANNERS     = [SK, HACKER_SK]
@@ -167,7 +188,7 @@ async def run_forever(prompt):
     hline()
     gprint(f"  TARGET PROMPT  : {prompt}", C.YELLOW)
     gprint(f"  PIPELINE SIZE  : {PIPELINE_SIZE} parallel requests", C.CYAN)
-    gprint(f"  OUTPUT FOLDER  : images\\", C.CYAN)
+    gprint(f"  OUTPUT FOLDER  : {IMG_DIR}", C.CYAN)
     gprint(f"  STARTED        : {time.strftime('%H:%M:%S')}", C.CYAN)
     hline()
     gprint("  [SYS] Establishing WebSocket tunnel to grok.com ...", C.MAGENTA)
@@ -235,7 +256,7 @@ async def run_forever(prompt):
                 if blob:
                     ts_str   = str(int(time.time() * 1000))
                     short_id = (job_id or "img")[:8]
-                    fname    = os.path.join("images", f"{safe_prompt}_{short_id}_{ts_str}.jpg")
+                    fname    = os.path.join(IMG_DIR, f"{safe_prompt}_{short_id}_{ts_str}.jpg")
                     if "," in blob:
                         blob = blob.split(",", 1)[1]
                     with open(fname, "wb") as f:

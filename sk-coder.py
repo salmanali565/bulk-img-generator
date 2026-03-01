@@ -8,7 +8,16 @@ import time
 import sys
 import random
 
-os.makedirs("images", exist_ok=True)
+# ── Environment & Storage Setup ──────────────────────────────────────────────
+IS_TERMUX = os.path.exists("/sdcard") or os.environ.get("TERMUX_VERSION")
+if IS_TERMUX:
+    IMG_DIR = "/sdcard/Pictures/SK_Grok_Bulk"
+    if not os.path.exists("/sdcard"):
+        IMG_DIR = os.path.expanduser("~/images")
+else:
+    IMG_DIR = "images"
+
+os.makedirs(IMG_DIR, exist_ok=True)
 
 # Auto-detect websockets version for cross-platform header arg
 _ws_ver = tuple(int(x) for x in websockets.__version__.split(".")[:2])
@@ -16,16 +25,17 @@ _HEADERS_KWARG = "additional_headers" if _ws_ver >= (12, 0) else "extra_headers"
 
 # ── ANSI Color Codes ──────────────────────────────────────────────────────────
 class C:
-    RESET  = "\033[0m"
-    BOLD   = "\033[1m"
-    DIM    = "\033[2m"
-    GREEN  = "\033[92m"
-    CYAN   = "\033[96m"
-    RED    = "\033[91m"
-    YELLOW = "\033[93m"
-    MAGENTA= "\033[95m"
-    WHITE  = "\033[97m"
-    BGBLACK= "\033[40m"
+    RESET   = "\033[0m"
+    BOLD    = "\033[1m"
+    DIM     = "\033[2m"
+    GREEN   = "\033[92m"
+    CYAN    = "\033[96m"
+    RED     = "\033[91m"
+    YELLOW  = "\033[93m"
+    MAGENTA = "\033[95m"
+    WHITE   = "\033[97m"
+    GOLD    = "\033[33m"
+    BGBLACK = "\033[40m"
 
 # Enable ANSI on Windows
 if sys.platform == "win32":
@@ -43,14 +53,20 @@ HEADERS = {
 }
 # ──────────────────────────────────────────────────────────────────────────────
 
-URI = "wss://grok.com/ws/imagine/listen"
+URI           = "wss://grok.com/ws/imagine/listen"
 PIPELINE_SIZE = 10   # Parallel requests in-flight at once
 
 
-def print_banner(art, color):
-    """Print a banner in a given color."""
+def _glitch_print(art, color):
+    """Print banner with king-style glitch effect."""
     os.system("cls" if sys.platform == "win32" else "clear")
+    GLITCH_CHARS = "!#$%&*@><|/\\^~"
     for line in art.strip().split("\n"):
+        if line.strip() and random.random() > 0.65:
+            g = "".join(random.choice(GLITCH_CHARS) for _ in range(min(len(line), 38)))
+            print(f"\r{C.RED}{C.DIM}{g}{C.RESET}", end="", flush=True)
+            time.sleep(0.015)
+            print(f"\r{' ' * 40}", end="", flush=True)
         print(f"{color}{C.BOLD}{line}{C.RESET}")
 
 
@@ -58,72 +74,110 @@ def gprint(msg, color=C.GREEN, end="\n"):
     print(f"{color}{msg}{C.RESET}", end=end, flush=True)
 
 
-def hline(char="─", color=C.CYAN, width=40): # Smaller default width for mobile
+def hline(char="═", color=C.GOLD, width=38):
     print(f"{color}{char * width}{C.RESET}", flush=True)
 
 
 def banner():
-    # Smaller SK for mobile
-    SK = r"""
-  ___ _  __
- / __| |/ /
- \__ \ ' < 
- |___/_|\_\ """
+    # ── KING-style banner (mobile-width ~38 chars) ──
+    CROWN = [
+        "       .+.   .+.   .+.       ",
+        "      (###) (###) (###)      ",
+        "  .+. |###| |###| |###| .+. ",
+        " (###)|###| |###| |###|(###)",
+        " |###||#####################|",
+        " |###########################|",
+    ]
 
-    # Smaller HACKER SK for mobile
-    HACKER_SK = r"""
-  _  _   _   ___ _  _____ ___ 
- | || | /_\ / __| |/ / __| _ \
- | __ |/ _ \ (__| ' <| _||   /
- |_||_/_/ \_\___|_|\_\___|_|_\ 
-      ___ _  __
-     / __| |/ /
-     \__ \ ' < 
-     |___/_|\_\ """
+    HACKER = [
+        " +-+-+-+-+-+-+",
+        " |H|A|C|K|E|R|",
+        " +-+-+-+-+-+-+",
+    ]
 
-    COLOR_CYCLE = [C.GREEN, C.CYAN, C.MAGENTA, C.YELLOW, C.RED, C.GREEN]
-    BANNERS     = [SK, HACKER_SK]
+    SK = [
+        "   +-+-+",
+        "   |S|K|",
+        "   +-+-+",
+    ]
 
-    # Cycle between SK and HACKER SK
-    for i in range(6):
-        banner_art = BANNERS[i % 2]
-        color      = COLOR_CYCLE[i % len(COLOR_CYCLE)]
-        print_banner(banner_art, color)
+    KING_COLORS = [C.GOLD, C.YELLOW, C.RED, C.WHITE, C.GOLD, C.GREEN]
 
-        if i == 5: break
+    for cycle in range(6):
+        os.system("cls" if sys.platform == "win32" else "clear")
+        col = KING_COLORS[cycle % len(KING_COLORS)]
 
-        print(f"\n  {C.DIM}[ changing in 2s... ]{C.RESET}")
+        # Crown
+        for line in CROWN:
+            print(f"{C.GOLD}{C.BOLD}{line}{C.RESET}")
+
+        print()
+        # HACKER block
+        for line in HACKER:
+            if line.strip() and random.random() > 0.6:
+                g = "".join(random.choice("!#$%><*@") for _ in range(len(line)))
+                print(f"\r{C.RED}{C.DIM}{g}{C.RESET}", end="", flush=True)
+                time.sleep(0.02)
+                print(f"\r{' ' * 40}", end="", flush=True)
+            print(f"{col}{C.BOLD}{line}{C.RESET}")
+
+        # SK block
+        for line in SK:
+            print(f"{C.RED}{C.BOLD}{line}{C.RESET}")
+
+        if cycle == 5:
+            break
+
+        print(f"\n{C.DIM}  [ cycling {cycle+1}/5 — Ctrl+C to skip ]{C.RESET}")
         try:
             time.sleep(2)
         except KeyboardInterrupt:
             break
 
-    # Final settled banner
-    print_banner(HACKER_SK, C.GREEN)
+    # ── Final locked-in KING banner ──
+    os.system("cls" if sys.platform == "win32" else "clear")
+    for line in CROWN:
+        print(f"{C.GOLD}{C.BOLD}{line}{C.RESET}")
+    print()
 
-    SUBTITLE = """
- ╔════════════════════════════════════╗
- ║  GROK BULK GEN // PIPELINE v2.0    ║
- ╚════════════════════════════════════╝"""
-
-    BOOT = [
-        "[BOOT] Initializing SK exploit framework ...",
-        "[BOOT] Loading WebSocket injection module ...",
-        "[BOOT] Bypassing rate-limit firewall ...",
-        "[BOOT] Hooking pipeline dispatcher ...",
-        "[BOOT] Arming image extraction engine ...",
-        "[SYS]  ALL SYSTEMS ARMED. READY TO FIRE.",
+    # Big-block HACKER SK stacked
+    HACKER_SK_FINAL = [
+        f"{C.RED}{C.BOLD} ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗{C.RESET}",
+        f"{C.RED}{C.BOLD} ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗{C.RESET}",
+        f"{C.RED}{C.BOLD} ███████║███████║██║     █████╔╝ █████╗  ██████╔╝{C.RESET}",
+        f"{C.RED}{C.BOLD} ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗{C.RESET}",
+        f"{C.RED}{C.BOLD} ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║{C.RESET}",
+        f"{C.GOLD}{C.BOLD} ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝{C.RESET}",
+        "",
+        f"{C.YELLOW}{C.BOLD}          ██████╗ ██╗  ██╗{C.RESET}",
+        f"{C.YELLOW}{C.BOLD}         ██╔════╝ ██║ ██╔╝{C.RESET}",
+        f"{C.YELLOW}{C.BOLD}         ╚█████╗  █████╔╝ {C.RESET}",
+        f"{C.YELLOW}{C.BOLD}          ╚═══██╗ ██╔═██╗ {C.RESET}",
+        f"{C.YELLOW}{C.BOLD}         ██████╔╝ ██║  ██╗{C.RESET}",
+        f"{C.GOLD}{C.BOLD}         ╚═════╝  ╚═╝  ╚═╝{C.RESET}",
     ]
-
-    for line in SUBTITLE.split("\n"):
-        print(f"{C.CYAN}{line}{C.RESET}")
-        time.sleep(0.03)
+    for line in HACKER_SK_FINAL:
+        print(line)
+        time.sleep(0.04)
 
     print()
+    hline("═", C.GOLD)
+    print(f"{C.GOLD}{C.BOLD}   ♛  GROK BULK GEN // PIPELINE v2.0  ♛{C.RESET}")
+    hline("═", C.GOLD)
+
+    BOOT = [
+        "  [♛] Initializing SK exploit framework ...",
+        "  [♛] Loading WebSocket injection module ...",
+        "  [♛] Bypassing rate-limit firewall ...",
+        "  [♛] Hooking pipeline dispatcher ...",
+        "  [♛] Arming image extraction engine ...",
+        "  [♛] STORAGE ACCESS GRANTED ✔",
+        "  [♛] ALL SYSTEMS ARMED. READY TO FIRE.",
+    ]
+    print()
     for i, msg in enumerate(BOOT):
-        col  = C.RED if i == len(BOOT) - 1 else C.DIM + C.GREEN
-        bold = C.BOLD if i == len(BOOT) - 1 else ""
-        print(f"  {col}{bold}{msg}{C.RESET}")
+        col  = C.RED + C.BOLD if i == len(BOOT) - 1 else C.GOLD
+        print(f"{col}{msg}{C.RESET}")
         time.sleep(0.18)
 
     print()
@@ -164,12 +218,12 @@ async def run_forever(prompt):
     start_time  = time.time()
 
     hline()
-    gprint(f"  TARGET PROMPT  : {prompt}", C.YELLOW)
-    gprint(f"  PIPELINE SIZE  : {PIPELINE_SIZE} parallel requests", C.CYAN)
-    gprint(f"  OUTPUT FOLDER  : images\\", C.CYAN)
-    gprint(f"  STARTED        : {time.strftime('%H:%M:%S')}", C.CYAN)
+    gprint(f"  TARGET  : {prompt}", C.YELLOW)
+    gprint(f"  PIPE    : {PIPELINE_SIZE} parallel requests", C.CYAN)
+    gprint(f"  SAVE TO : {IMG_DIR}", C.CYAN)
+    gprint(f"  START   : {time.strftime('%H:%M:%S')}", C.CYAN)
     hline()
-    gprint("  [SYS] Establishing WebSocket tunnel to grok.com ...", C.MAGENTA)
+    gprint("  [SYS] Establishing WebSocket tunnel ...", C.MAGENTA)
 
     async with websockets.connect(
         URI,
@@ -180,7 +234,7 @@ async def run_forever(prompt):
     ) as ws:
 
         gprint("  [SYS] TUNNEL ESTABLISHED ✔", C.GREEN)
-        gprint(f"  [SYS] Flooding pipeline with {PIPELINE_SIZE} requests ...", C.MAGENTA)
+        gprint(f"  [SYS] Flooding pipeline [{PIPELINE_SIZE} reqs] ...", C.MAGENTA)
 
         job_to_req = {}
         req_active = {}
@@ -198,14 +252,14 @@ async def run_forever(prompt):
         for _ in range(PIPELINE_SIZE):
             await send_request()
 
-        gprint(f"  [SYS] Pipeline active. Intercepting image streams ...\n", C.MAGENTA)
+        gprint(f"  [SYS] Pipeline active. Intercepting streams ...\n", C.MAGENTA)
         hline("─", C.DIM)
 
         while True:
             try:
                 raw = await asyncio.wait_for(ws.recv(), timeout=60)
             except asyncio.TimeoutError:
-                gprint("  [WARN] Idle timeout — re-injecting request ...", C.YELLOW)
+                gprint("  [WARN] Idle — re-injecting ...", C.YELLOW)
                 await send_request()
                 continue
 
@@ -228,13 +282,12 @@ async def run_forever(prompt):
                         req_active[req_id].discard(job_id)
                         req_done[req_id] = req_done.get(req_id, 0) + 1
 
-            # Save final 100% images and print hacker-style log
             if msg_type == "image" and pct == 100.0:
                 blob = data.get("blob")
                 if blob:
                     ts_str   = str(int(time.time() * 1000))
                     short_id = (job_id or "img")[:8]
-                    fname    = os.path.join("images", f"{safe_prompt}_{short_id}_{ts_str}.jpg")
+                    fname    = os.path.join(IMG_DIR, f"{safe_prompt}_{short_id}_{ts_str}.jpg")
                     if "," in blob:
                         blob = blob.split(",", 1)[1]
                     with open(fname, "wb") as f:
@@ -242,13 +295,12 @@ async def run_forever(prompt):
                     total_saved += 1
                     elapsed = int(time.time() - start_time)
                     rate    = total_saved / elapsed if elapsed > 0 else 0
-                    # Hacker-style line with color
-                    tag   = f"{C.GREEN}[+]{C.RESET}"
-                    num   = f"{C.BOLD}{C.WHITE}[{total_saved:04d}]{C.RESET}"
-                    jid   = f"{C.DIM}{C.CYAN}{short_id}{C.RESET}"
-                    name  = f"{C.GREEN}{fname}{C.RESET}"
-                    stats = f"{C.DIM}{C.YELLOW}| {rate:.1f} img/s | {elapsed}s elapsed{C.RESET}"
-                    print(f"  {tag} {num} {jid} → {name} {stats}", flush=True)
+                    crown  = f"{C.GOLD}{C.BOLD}[♛]{C.RESET}"
+                    num    = f"{C.BOLD}{C.WHITE}[{total_saved:04d}]{C.RESET}"
+                    jid    = f"{C.DIM}{C.CYAN}{short_id}{C.RESET}"
+                    name   = f"{C.GREEN}{fname}{C.RESET}"
+                    stats  = f"{C.DIM}{C.YELLOW}| {rate:.1f}/s | {elapsed}s{C.RESET}"
+                    print(f"  {crown} {num} {jid} → {name} {stats}", flush=True)
 
             if req_id and req_id in in_flight:
                 active = req_active.get(req_id, set())
@@ -260,16 +312,15 @@ async def run_forever(prompt):
 
 def main():
     banner()
-    print()
-    hline("═", C.GREEN)
-    gprint("  GROK UNLIMITED IMAGE GENERATOR  //  BULK MODE", C.BOLD + C.GREEN)
-    gprint("  [!] Press Ctrl+C to abort at any time", C.RED)
-    hline("═", C.GREEN)
+    hline("═", C.GOLD)
+    gprint(f"  {C.GOLD}♛{C.RESET} GROK UNLIMITED  //  BULK MODE", C.BOLD + C.WHITE)
+    gprint("  [!] Ctrl+C to stop at any time", C.RED)
+    hline("═", C.GOLD)
     print()
 
-    prompt = input(f"  {C.CYAN}[>]{C.RESET} Enter target prompt: ").strip()
+    prompt = input(f"  {C.GOLD}[♛]{C.RESET} Enter target prompt: ").strip()
     if not prompt:
-        gprint("  [!] No prompt supplied. Aborting.", C.RED)
+        gprint("  [!] No prompt. Aborting.", C.RED)
         return
 
     print()
@@ -278,7 +329,7 @@ def main():
     except KeyboardInterrupt:
         print()
         hline("═", C.RED)
-        gprint("  [!] SESSION TERMINATED BY USER", C.RED + C.BOLD)
+        gprint("  [!] SESSION TERMINATED", C.RED + C.BOLD)
         hline("═", C.RED)
     except Exception as e:
         gprint(f"\n  [ERR] {e}", C.RED)
